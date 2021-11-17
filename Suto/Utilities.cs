@@ -3,6 +3,7 @@ using System.Management;
 using System.Text;
 using System.Text.RegularExpressions;
 
+#pragma warning disable CA1416 // Validate platform compatibility
 namespace Suto;
 
 /// <summary>
@@ -48,7 +49,6 @@ internal class Utilities
 
     public static string? GetSteamDirectory()
     {
-
         string? steamInstall = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)?.OpenSubKey("SOFTWARE")?.OpenSubKey("WOW6432Node")?.OpenSubKey("Valve")?.OpenSubKey("Steam")?.GetValue("InstallPath")?.ToString();
         if (string.IsNullOrEmpty(steamInstall))
             steamInstall = Registry.LocalMachine.OpenSubKey("SOFTWARE")?.OpenSubKey("WOW6432Node")?.OpenSubKey("Valve")?.OpenSubKey("Steam")?.GetValue("InstallPath")?.ToString();
