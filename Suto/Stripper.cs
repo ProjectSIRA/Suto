@@ -6,11 +6,13 @@ internal class Stripper
 {
     internal static void DLL(string f, string outDir, params string[] resolverDirs)
     {
-        if (File.Exists(f) == false) return;
-        var file = new FileInfo(f);
+        if (!File.Exists(f))
+            return;
+
+        FileInfo file = new(f);
         Log.Logger.Debug($"Stripping {file.Name}");
 
-        var mod = Processor.Load(file.FullName, resolverDirs);
+        Processor mod = Processor.Load(file.FullName, resolverDirs);
         mod.Virtualize();
         mod.Strip();
 

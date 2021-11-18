@@ -6,6 +6,9 @@ internal class Resolver
     {
         IEnumerable<string> files = Directory.GetFiles(directory).Where(path =>
         {
+            if (path.Contains("Particle"))
+                _ = true;
+
             FileInfo info = new(path);
             if (info.Extension != ".dll")
                 return false;

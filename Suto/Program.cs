@@ -41,11 +41,10 @@ outManaged.Create();
 
 string[] ignorables = new string[]
 {
-    "BouncyCastle.Crypto.dll",
-    "Microsoft",
-    "System",
-    "mscorlib",
-    "netstandard"
+    //"BouncyCastle.Crypto.dll",
+    //"Microsoft.",
+    //"System.",
+    //"mscorlib"
 };
 
 string[] libInclude = new string[]
