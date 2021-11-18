@@ -1,4 +1,6 @@
 ﻿using Mono.Cecil;
+using Mono.Cecil.Rocks;
+using System.Runtime.InteropServices;
 
 namespace Suto;
 
@@ -10,6 +12,7 @@ internal class Processor
     }
 
     private readonly FileInfo _file;
+    private TypeReference? _inModreqRef;
     private ModuleDefinition _module = null!;
 
     internal Processor(string fileName, params string[] resolverDirs)
@@ -65,7 +68,7 @@ internal class Processor
             if (m.IsManaged
                 && m.IsIL
                 && !m.IsStatic
-                && !m.IsVirtual
+                && (!m.IsVirtual || m.IsFinal)
                 && !m.IsAbstract
                 && !m.IsAddOn
                 && !m.IsConstructor
@@ -73,6 +76,16 @@ internal class Processor
                 && !m.IsGenericInstance
                 && !m.HasOverrides)
             {
+
+                foreach (var param in m.Parameters)
+                {
+                    if (param.IsIn)
+                    {
+                        _inModreqRef ??= _module.ImportReference(typeof(InAttribute));
+                        param.ParameterType = AddModreqIfNotExist(param.ParameterType, _inModreqRef);
+                    }
+                }
+
                 m.IsVirtual = true;
                 m.IsPublic = true;
                 m.IsPrivate = false;
@@ -87,12 +100,55 @@ internal class Processor
         }
     }
 
+    private TypeReference AddModreqIfNotExist(TypeReference type, TypeReference mod)
+    {
+        var (element, opt, req) = GetDecomposedModifiers(type);
+        if (!req.Contains(mod))
+        {
+            req.Add(mod);
+        }
+        return BuildModifiedType(element, opt, req);
+    }
+
     public void Strip()
     {
         foreach (TypeDefinition type in _module.Types)
         {
             StripType(type);
         }
+    }
+
+    private (TypeReference Element, List<TypeReference> ModOpt, List<TypeReference> ModReq) GetDecomposedModifiers(TypeReference type)
+    {
+        var opt = new List<TypeReference>();
+        var req = new List<TypeReference>();
+
+        while (type is IModifierType modif)
+        {
+            if (type.IsOptionalModifier)
+                opt.Add(modif.ModifierType);
+            if (type.IsRequiredModifier)
+                req.Add(modif.ModifierType);
+
+            type = modif.ElementType;
+        }
+
+        return (type, opt, req);
+    }
+
+    private TypeReference BuildModifiedType(TypeReference type, IEnumerable<TypeReference> opt, IEnumerable<TypeReference> req)
+    {
+        foreach (var mod in req)
+        {
+            type = type.MakeRequiredModifierType(mod);
+        }
+
+        foreach (var mod in opt)
+        {
+            type = type.MakeOptionalModifierType(mod);
+        }
+
+        return type;
     }
 
     private void StripType(TypeDefinition type)
