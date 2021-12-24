@@ -54,6 +54,12 @@ internal class Processor
     private void VirtualizeType(TypeDefinition type)
     {
         if (type.IsSealed) type.IsSealed = false;
+        
+        if (type.IsNestedPrivate)
+        {
+            type.IsNestedPrivate = false;
+            type.IsNestedPublic = true;
+        }
 
         if (type.IsInterface) return;
         if (type.IsAbstract) return;
@@ -87,6 +93,7 @@ internal class Processor
                 }
 
                 m.IsVirtual = true;
+                m.IsFinal = false;
                 m.IsPublic = true;
                 m.IsPrivate = false;
                 m.IsNewSlot = true;
