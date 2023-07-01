@@ -84,9 +84,11 @@ if (File.Exists(zipSavePath))
 
 ZipFile.CreateFromDirectory(outDirectory, zipSavePath);
 
-ProcessStartInfo info = new();
-info.FileName = "explorer";
-info.Arguments = string.Format("/select, \"{0}\"", zipSavePath);
+ProcessStartInfo info = new()
+{
+    FileName = "explorer",
+    Arguments = $"/select, \"{zipSavePath}\""
+};
 Process.Start(info);
 
 Log.Logger.Information("Completed. Enjoy your files!");
